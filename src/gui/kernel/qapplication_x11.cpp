@@ -4532,6 +4532,7 @@ bool QETWidget::translateMouseEvent(const XEvent *event)
         static bool pressed = false;
 
         switch (type) {
+		case (QEvent::MouseButtonDblClick):
         case (QEvent::MouseButtonPress): {
             touchPoint.setState(Qt::TouchPointPressed | Qt::TouchPointPrimary);
             touchPoint.setPos(pos);

@@ -8,6 +8,6 @@ contains(QT_CONFIG, wayland) {
     SUBDIRS += wayland
 }
 
-qnx-*-qcc {
+qnx {
     SUBDIRS += blackberry
 }

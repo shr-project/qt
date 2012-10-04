@@ -272,6 +272,10 @@ if [ -d /System/Library/Frameworks/Carbon.framework ]; then
     BUILD_ON_MAC=yes
 else
     PLATFORM_MAC=no
+# QT_WEBOS
+PLATFORM_WEBOS=yes
+
+
 fi
 
 #-----------------------------------------------------------------------------
@@ -842,6 +846,7 @@ CFG_QS60STYLE=auto
 CFG_LARGEFILE=auto
 CFG_OPENSSL=auto
 CFG_PTMALLOC=no
+CFG_TIMERFD=no
 CFG_STL=auto
 CFG_PRECOMPILE=auto
 CFG_SEPARATE_DEBUG_INFO=no
@@ -2227,6 +2232,13 @@ while [ "$#" -gt 0 ]; do
             else
                 UNKNOWN_OPT=yes
             fi
+        fi
+        ;;
+    timerfd)
+        if [ "$VAL" = "yes" ] || [ "$VAL" = "no" ]; then
+            CFG_TIMERFD="$VAL"
+        else
+            UNKNOWN_OPT=yes
         fi
         ;;
     declarative)
@@ -4783,7 +4795,7 @@ static const char qt_configure_licensee_str          [256 + 12] = "$LICENSE_USER
 static const char qt_configure_licensed_products_str [256 + 12] = "$LICENSE_PRODUCTS_STR";
 
 /* Installation date */
-static const char qt_configure_installation          [12+11]    = "qt_instdate=$TODAY";
+static const char qt_configure_installation          [12+11]    = "qt_instdate=2010-05-05";
 EOF
 
 

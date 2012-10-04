@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -3467,7 +3469,11 @@ void QWSServerPrivate::update_regions()
 
     for (int i = 0; i < windows.count(); ++i) {
         QWSWindow *w = windows.at(i);
+#if defined(QT_WEBOS)
+        QRegion r = w->requested_region;
+#else
         QRegion r = (w->requested_region & available);
+#endif
 
 #ifndef QT_NO_QWSEMBEDWIDGET
         // Subtract regions needed for embedded windows

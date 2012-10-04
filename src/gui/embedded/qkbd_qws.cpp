@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -73,6 +75,10 @@ public:
     QWSKbPrivate(QWSKeyboardHandler *h, const QString &device)
         : m_handler(h), m_modifiers(0), m_composing(0), m_dead_unicode(0xffff),
           m_no_zap(false), m_do_compose(false),
+#ifdef QT_WEBOS
+          m_capslock_on (false),
+          m_isExternalKeyboard(false),
+#endif // QT_WEBOS
           m_keymap(0), m_keymap_size(0), m_keycompose(0), m_keycompose_size(0)
     {
         m_ar_timer = new QTimer(this);
@@ -164,6 +170,10 @@ private:
 
     bool m_no_zap;
     bool m_do_compose;
+#ifdef QT_WEBOS
+    bool m_capslock_on;
+    bool m_isExternalKeyboard;
+#endif // QT_WEBOS
 
     const QWSKeyboard::Mapping *m_keymap;
     int m_keymap_size;
@@ -548,13 +558,33 @@ QWSKeyboardHandler::KeycodeAction QWSKeyboardHandler::processKeycode(quint16 key
     bool skip = false;
     quint16 unicode = it->unicode;
     quint32 qtcode = it->qtcode;
+#ifdef QT_WEBOS
+    quint16 shiftMods = QWSKeyboard::ModShift | QWSKeyboard::ModCtrlL | QWSKeyboard::ModShiftR;
+#endif
 
     if ((it->flags & QWSKeyboard::IsModifier) && it->special) {
+#ifndef QT_WEBOS
         // this is a modifier, i.e. Shift, Alt, ...
         if (pressed)
             d->m_modifiers |= quint8(it->special);
         else
             d->m_modifiers &= ~quint8(it->special);
+#else // QT_WEBOS
+	if (d->m_capslock_on && (it->special & shiftMods)) {
+		//CapsLock on with Shift modifier, reversing shift modifier action
+		if (pressed)
+			d->m_modifiers &= ~quint8(it->special);
+		else
+			d->m_modifiers |= quint8(it->special);
+	}
+	else {
+		// this is a modifier, i.e. Shift, Alt, ...
+		if (pressed)
+			d->m_modifiers |= quint8(it->special);
+		else
+			d->m_modifiers &= ~quint8(it->special);
+	}
+#endif // QT_WEBOS
     } else if (qtcode >= Qt::Key_CapsLock && qtcode <= Qt::Key_ScrollLock) {
         // (Caps|Num|Scroll)Lock
         if (first_press) {
@@ -568,6 +598,16 @@ QWSKeyboardHandler::KeycodeAction QWSKeyboardHandler::processKeycode(quint16 key
             default                : break;
             }
         }
+#ifdef QT_WEBOS
+	if (qtcode == Qt::Key_CapsLock && pressed) {
+		d->m_capslock_on = !d->m_capslock_on;
+		if (d->m_capslock_on)
+			d->m_modifiers |= QWSKeyboard::ModShift;
+		else 
+			d->m_modifiers &= ~(shiftMods);
+	}
+#endif // QT_WEBOS
+
     } else if ((it->flags & QWSKeyboard::IsSystem) && it->special && first_press) {
         switch (it->special) {
         case QWSKeyboard::SystemReboot:
@@ -617,7 +657,11 @@ QWSKeyboardHandler::KeycodeAction QWSKeyboardHandler::processKeycode(quint16 key
 
     if (!skip) {
         // a normal key was pressed
+#if defined(QT_WEBOS)
+        const int modmask = Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::KeypadModifier | Qt::ExternalKeyboardModifier;
+#else
         const int modmask = Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::KeypadModifier;
+#endif
 
         // we couldn't find a specific mapping for the current modifiers,
         // or that mapping didn't have special modifiers:
@@ -661,6 +705,9 @@ QWSKeyboardHandler::KeycodeAction QWSKeyboardHandler::processKeycode(quint16 key
                 if (idx < d->m_keycompose_size) {
                     quint16 composed = d->m_keycompose[idx].result;
                     if (composed != 0xffff) {
+#ifdef QT_DEBUG_KEYMAP
+						qWarning("Composing: '%s' + '%s' = '%s' (%04x + %04x = %04x)", QString(d->m_dead_unicode).toLatin1().data(), QString(unicode).toLatin1().data(), QString(composed).toLatin1().data(), (int) d->m_dead_unicode, (int) unicode, (int) composed);
+#endif
                         unicode = composed;
                         qtcode = Qt::Key_unknown;
                         valid = true;
@@ -675,16 +722,35 @@ QWSKeyboardHandler::KeycodeAction QWSKeyboardHandler::processKeycode(quint16 key
         }
 
         if (!skip) {
+			int qtkey = qtcode & ~modmask;
+			int qtmod = qtcode & modmask;
+
+			// when we generate a unicode character than has no Qt::Key equivalent, just use the unicode value
+			if (qtkey == Qt::Key_unknown && unicode >= Qt::Key_Space && unicode < 0xe000)
+				qtkey = unicode;
+
 #ifdef QT_DEBUG_KEYMAP
-            qWarning("Processing: uni=%04x, qt=%08x, qtmod=%08x", unicode, qtcode & ~modmask, (qtcode & modmask));
+			qWarning("Processing: uni=%04x '%s', qt=%08x, qtmod=%08x", unicode, QString(unicode).toLatin1().data(), qtkey, qtmod);
+#endif
+
+#if defined(QT_WEBOS)
+            if (d->m_isExternalKeyboard)
+                qtmod |= Qt::ExternalKeyboardModifier;
 #endif
 
             // send the result to the QWS server
-            processKeyEvent(unicode, qtcode & ~modmask, Qt::KeyboardModifiers(qtcode & modmask), pressed, autorepeat);
+            processKeyEvent(unicode, qtkey, Qt::KeyboardModifiers(qtmod), pressed, autorepeat);
         }
     }
     return result;
 }
+
+#if defined(QT_WEBOS)
+void QWSKeyboardHandler::setIsExternalKeyboard(bool val)
+{
+    d->m_isExternalKeyboard = val;
+}
+#endif
 
 QT_END_NAMESPACE
 

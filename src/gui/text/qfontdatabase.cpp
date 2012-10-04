@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -62,19 +64,19 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#if (defined(Q_WS_QWS)|| defined(Q_OS_SYMBIAN)) && !defined(QT_NO_FREETYPE)
+#if (defined(Q_WS_QPA) || defined(Q_WS_QWS)|| defined(Q_OS_SYMBIAN)) && !defined(QT_NO_FREETYPE)
 #  include <ft2build.h>
 #  include FT_TRUETYPE_TABLES_H
 #endif
 
-// #define QFONTDATABASE_DEBUG
+//#define QFONTDATABASE_DEBUG
 #ifdef QFONTDATABASE_DEBUG
 #  define FD_DEBUG qDebug
 #else
 #  define FD_DEBUG if (false) qDebug
 #endif
 
-// #define FONT_MATCH_DEBUG
+//#define FONT_MATCH_DEBUG
 #ifdef FONT_MATCH_DEBUG
 #  define FM_DEBUG qDebug
 #else
@@ -173,7 +175,7 @@ struct  QtFontSize
     unsigned short count : 16;
 #endif // Q_WS_X11
 
-#if defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_QPA) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
     QByteArray fileName;
     int fileIndex;
 #endif // defined(Q_WS_QWS) || defined(Q_WS_QPA) || defined(Q_OS_SYMBIAN)
@@ -646,7 +648,7 @@ class QFontDatabasePrivate
 public:
     QFontDatabasePrivate()
         : count(0), families(0), reregisterAppFonts(false)
-#if defined(Q_WS_QWS)
+#if defined(Q_WS_QWS) | defined(Q_WS_QPA)
           , stream(0)
 #endif
 #if defined(Q_OS_SYMBIAN) && defined(QT_NO_FREETYPE)
@@ -716,20 +718,27 @@ public:
 
     void invalidate();
 
-#if defined(Q_WS_QWS)
+#if defined(Q_WS_QWS) | defined(Q_WS_QPA)
     bool loadFromCache(const QString &fontPath);
     void addQPF2File(const QByteArray &file);
 #endif // Q_WS_QWS
-#if defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN) && !defined(QT_NO_FREETYPE)
+#if defined(Q_WS_QPA) || defined(Q_WS_QWS) ||   defined(Q_OS_SYMBIAN) && !defined(QT_NO_FREETYPE)
+#ifndef QT_WEBOS
     void addFont(const QString &familyname, const char *foundryname, int weight,
                  bool italic, int pixelSize, const QByteArray &file, int fileIndex,
                  bool antialiased,
                  const QList<QFontDatabase::WritingSystem> &writingSystems = QList<QFontDatabase::WritingSystem>());
+#else // QT_WEBOS
+    void addFont(const QString &familyname, const char *foundryname, int weight, 
+                 int italicObliqueStyle, int pixelSize, const QByteArray &file, int fileIndex,
+                 bool antialiased, int stretch = QFont::Unstretched,
+                 const QList<QFontDatabase::WritingSystem> &writingSystems = QList<QFontDatabase::WritingSystem>());
+#endif // QT_WEBOS
 #ifndef QT_NO_FREETYPE
     QStringList addTTFile(const QByteArray &file, const QByteArray &fontData = QByteArray());
 #endif // QT_NO_FREETYPE
 #endif
-#if defined(Q_WS_QWS)
+#if defined(Q_WS_QWS) | defined(Q_WS_QPA)
     QDataStream *stream;
 #elif defined(Q_OS_SYMBIAN) && defined(QT_NO_FREETYPE)
     QSymbianFontDatabaseExtras *symbianExtras;
@@ -785,7 +794,8 @@ QtFontFamily *QFontDatabasePrivate::family(const QString &f, bool create)
     return families[pos];
 }
 
-#if defined(Q_WS_QWS) ||  defined(Q_OS_SYMBIAN) && !defined(QT_NO_FREETYPE)
+#if defined(Q_WS_QPA) || defined(Q_WS_QWS) ||   defined(Q_OS_SYMBIAN) && !defined(QT_NO_FREETYPE)
+#ifndef QT_WEBOS
 void QFontDatabasePrivate::addFont(const QString &familyname, const char *foundryname, int weight, bool italic, int pixelSize,
                                    const QByteArray &file, int fileIndex, bool antialiased,
                                    const QList<QFontDatabase::WritingSystem> &writingSystems)
@@ -795,6 +805,17 @@ void QFontDatabasePrivate::addFont(const QString &familyname, const char *foundr
     styleKey.style = italic ? QFont::StyleItalic : QFont::StyleNormal;
     styleKey.weight = weight;
     styleKey.stretch = 100;
+#else // QT_WEBOS
+void QFontDatabasePrivate::addFont(const QString &familyname, const char *foundryname, int weight, int italicObliqueStyle, int pixelSize,
+                                   const QByteArray &file, int fileIndex, bool antialiased, int stretch,
+                                   const QList<QFontDatabase::WritingSystem> &writingSystems)
+{
+//    qDebug() << "Adding font" << familyname << weight << italicObliqueStyle << pixelSize << file << fileIndex << antialiased << stretch;
+    QtFontStyle::Key styleKey;
+    styleKey.style = italicObliqueStyle;
+    styleKey.weight = weight;
+    styleKey.stretch = stretch;
+#endif // QT_WEBOS
     QtFontFamily *f = family(familyname, true);
 
     if (writingSystems.isEmpty()) {
@@ -816,10 +837,15 @@ void QFontDatabasePrivate::addFont(const QString &familyname, const char *foundr
     size->fileName = file;
     size->fileIndex = fileIndex;
 
-#if defined(Q_WS_QWS)
+#if defined(Q_WS_QWS) || defined(Q_WS_QPA)
     if (stream) {
+#ifndef QT_WEBOS
         *stream << familyname << foundry->name << weight << quint8(italic) << pixelSize
                 << file << fileIndex << quint8(antialiased);
+#else // QT_WEBOS
+        *stream << familyname << foundry->name << weight << italicObliqueStyle << stretch << pixelSize
+                << file << fileIndex << quint8(antialiased);
+#endif // QT_WEBOS
         *stream << quint8(writingSystems.count());
         for (int i = 0; i < writingSystems.count(); ++i)
             *stream << quint8(writingSystems.at(i));
@@ -831,7 +857,7 @@ void QFontDatabasePrivate::addFont(const QString &familyname, const char *foundr
 }
 #endif
 
-#if (defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)) && !defined(QT_NO_FREETYPE)
+#if (defined(Q_WS_QPA) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)) && !defined(QT_NO_FREETYPE)
 QStringList QFontDatabasePrivate::addTTFile(const QByteArray &file, const QByteArray &fontData)
 {
     QStringList families;
@@ -855,10 +881,31 @@ QStringList QFontDatabasePrivate::addTTFile(const QByteArray &file, const QByteA
         numFaces = face->num_faces;
 
         int weight = QFont::Normal;
+#ifndef QT_WEBOS
         bool italic = face->style_flags & FT_STYLE_FLAG_ITALIC;
 
         if (face->style_flags & FT_STYLE_FLAG_BOLD)
             weight = QFont::Bold;
+#else // QT_WEBOS
+        int stretch = QFont::Unstretched;
+        int italicObliqueStyle = QFont::StyleNormal;
+
+        if (face->style_flags & FT_STYLE_FLAG_BOLD)
+            weight = QFont::Bold;
+
+        QString styleName = QString::fromUtf8(face->style_name);
+        if (styleName.contains(QLatin1String("condensed"), Qt::CaseInsensitive)) {
+        	stretch = QFont::Condensed;
+        }
+        if (styleName.contains(QLatin1String("bold"), Qt::CaseInsensitive)) {
+        	weight = QFont::Bold;
+        }
+        if (styleName.contains(QLatin1String("italic"), Qt::CaseInsensitive)) {
+        	italicObliqueStyle = QFont::StyleItalic;
+        } else if (styleName.contains(QLatin1String("oblique"), Qt::CaseInsensitive)) {
+        	italicObliqueStyle = QFont::StyleOblique;
+        }
+#endif // QT_WEBOS
 
         QList<QFontDatabase::WritingSystem> writingSystems;
         // detect symbol fonts
@@ -886,10 +933,17 @@ QStringList QFontDatabasePrivate::addTTFile(const QByteArray &file, const QByteA
             }
         }
 
+#ifndef QT_WEBOS
         QString family = QString::fromAscii(face->family_name);
         families.append(family);
         addFont(family, /*foundry*/ "", weight, italic,
                 /*pixelsize*/ 0, file, index, /*antialias*/ true, writingSystems);
+#else // QT_WEBOS
+        QString family = QString::fromUtf8(face->family_name);
+        families.append(family);        
+        addFont(family, /*foundry*/ "", weight, italicObliqueStyle,
+                /*pixelsize*/ 0, file, index, /*antialias*/ true, stretch, writingSystems);
+#endif // QT_WEBOS
 
         FT_Done_Face(face);
         ++index;
@@ -1524,6 +1578,7 @@ static QString styleStringHelper(int weight, QFont::Style style)
 
     if (result.isEmpty())
         result = QApplication::translate("QFontDatabase", "Normal");
+
 
     return result.simplified();
 }
@@ -2614,10 +2669,12 @@ int QFontDatabasePrivate::addAppFont(const QByteArray &fontData, const QString &
     registerFont(&font);
     if (font.families.isEmpty())
         return -1;
-
     applicationFonts[i] = font;
 
+#ifndef QT_WEBOS
+    //Invalidating the cache after loading an app font causes the font database to purge itself :(
     invalidate();
+#endif
     return i;
 }
 

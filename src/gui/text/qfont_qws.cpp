@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -52,9 +54,9 @@
 //#include "qmemorymanager_qws.h"
 #include "qtextengine_p.h"
 #include "qfontengine_p.h"
-#if !defined(QT_NO_FREETYPE)
+//#if !defined(QT_NO_FREETYPE)
 #include "qfontengine_ft_p.h"
-#endif
+//#endif
 
 QT_BEGIN_NAMESPACE
 

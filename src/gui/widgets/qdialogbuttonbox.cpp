@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -266,7 +268,9 @@ public:
     QDialogButtonEnabledProxy(QObject *parent, QWidget *src, QAction *trg) : QObject(parent), source(src), target(trg)
     {
         source->installEventFilter(this);
+#ifndef QT_NO_ACTION // for QT_WEBOS
         target->setEnabled(source->isEnabled());
+#endif // QT_NO_ACTION // for QT_WEBOS
     }
     ~QDialogButtonEnabledProxy()
     {
@@ -274,9 +278,11 @@ public:
     }
     bool eventFilter(QObject *object, QEvent *event)
     {
+#ifndef QT_NO_ACTION // for QT_WEBOS
         if (object == source && event->type() == QEvent::EnabledChange) {
             target->setEnabled(source->isEnabled());
         }
+#endif // QT_NO_ACTION // for QT_WEBOS
         return false;
     };
 private:

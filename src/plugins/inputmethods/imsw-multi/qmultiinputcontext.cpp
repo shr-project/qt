@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
@@ -85,6 +87,7 @@ QMultiInputContext::QMultiInputContext()
     if (current < 0)
         current = 0;
 
+#ifndef QT_NO_MENU // for QT_WEBOS
     menu = new QMenu(tr("Select IM"));
     separator = new QAction(this);
     separator->setSeparator(true);
@@ -103,11 +106,14 @@ QMultiInputContext::QMultiInputContext()
         }
     }
     connect(group, SIGNAL(triggered(QAction*)), this, SLOT(changeSlave(QAction*)));
+#endif // QT_NO_MENU // for QT_WEBOS
 }
 
 QMultiInputContext::~QMultiInputContext()
 {
+#ifndef QT_NO_MENU // for QT_WEBOS	
     delete menu;
+#endif // QT_NO_MENU // for QT_WEBOS
 }
 
 
@@ -185,12 +191,15 @@ QList<QAction *> QMultiInputContext::actions()
 {
     QList<QAction *> a = slave()->actions();
     a.append(separator);
+#ifndef QT_NO_MENU // for QT_WEBOS	
     a.append(menu->menuAction());
+#endif // QT_NO_MENU // for QT_WEBOS
     return a;
 }
 
 void QMultiInputContext::changeSlave(QAction *a)
 {
+#ifndef QT_NO_ACTION // for QT_WEBOS
     for (int i = 0; i < slaves.size(); ++i) {
         if (keys.at(i) == a->data().toString()) {
             if (slaves.at(i) == 0)
@@ -205,6 +214,7 @@ void QMultiInputContext::changeSlave(QAction *a)
             return;
         }
     }
+#endif // QT_NO_ACTION // for QT_WEBOS
 }
 
 QT_END_NAMESPACE

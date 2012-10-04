@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -1842,6 +1844,7 @@ bool QKeyMapper::sendKeyEvent(QWidget *keyWidget, bool grab,
                               quint32 nativeScanCode, quint32 nativeVirtualKey, quint32 nativeModifiers,
                               bool *)
 {
+#ifndef QT_NO_CONTEXTMENU // for QT_WEBOS
     // try the menukey first
     if (type == QEvent::KeyPress && code == Qt::Key_Menu) {
         QVariant v = keyWidget->inputMethodQuery(Qt::ImMicroFocus);
@@ -1859,6 +1862,7 @@ bool QKeyMapper::sendKeyEvent(QWidget *keyWidget, bool grab,
         if(e.isAccepted())
             return true;
     }
+#endif // QT_NO_CONTEXTMENU // for QT_WEBOS
 
     Q_UNUSED(grab);
     QKeyEventEx e(type, code, modifiers, text, autorepeat, qMax(qMax(count,1), int(text.length())),

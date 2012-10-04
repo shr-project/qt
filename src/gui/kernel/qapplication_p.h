@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -659,6 +661,9 @@ private:
 Q_GUI_EXPORT void qt_translateRawTouchEvent(QWidget *window,
                                             QTouchEvent::DeviceType deviceType,
                                             const QList<QTouchEvent::TouchPoint> &touchPoints);
+#ifdef QT_WEBOS
+Q_GUI_EXPORT bool qt_sendSpontaneousEvent(QObject *receiver, QEvent *event);
+#endif // QT_WEBOS
 
 #if defined(Q_WS_WIN)
   extern void qt_win_set_cursor(QWidget *, bool);

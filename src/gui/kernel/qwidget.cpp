@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -109,6 +111,12 @@
 #if defined(Q_OS_SYMBIAN)
 #include "private/qt_s60_p.h"
 #endif
+
+#ifdef QT_WEBOS
+#if defined(Q_WS_QWS)
+#include "qscreen_qws.h"
+#endif
+#endif // QT_WEBOS
 
 #include "qwidget_p.h"
 #include "qaction_p.h"
@@ -1350,6 +1358,15 @@ void QWidgetPrivate::init(QWidget *parentWidget, Qt::WindowFlags f)
 
     q->setAttribute(Qt::WA_WState_Hidden);
 
+#ifndef QT_WEBOS
+    //give potential windows a bigger "pre-initial" size; create_sys() will give them a new size later
+    data.crect = parentWidget ? QRect(0,0,100,30) : QRect(0,0,640,480);
+#else // QT_WEBOS
+#if defined(Q_WS_QWS)
+    const QScreen *screen = QScreen::instance();
+    QRect screenRect = screen->region().boundingRect();
+    data.crect = parentWidget ? QRect(0,0,100,30) : QRect(0,0,screenRect.width(),screenRect.height());
+#else
     //give potential windows a bigger "pre-initial" size; create_sys() will give them a new size later
 #ifdef Q_OS_SYMBIAN
     if (isGLWidget) {
@@ -1361,6 +1378,8 @@ void QWidgetPrivate::init(QWidget *parentWidget, Qt::WindowFlags f)
 #else
     data.crect = parentWidget ? QRect(0,0,100,30) : QRect(0,0,640,480);
 #endif
+#endif
+#endif // QT_WEBOS
 
     focus_next = focus_prev = q;
 

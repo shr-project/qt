@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -441,8 +443,15 @@ QGestureRecognizer::Result QTapGestureRecognizer::recognize(QGesture *state,
 
     switch (event->type()) {
     case QEvent::TouchBegin: {
+#ifndef QT_WEBOS // REBASE_CHECK_REQUIRED necessary?
         d->position = ev->touchPoints().at(0).pos();
         q->setHotSpot(ev->touchPoints().at(0).screenPos());
+#else // QT_WEBOS
+        QTouchEvent::TouchPoint p = ev->touchPoints().at(0);
+        d->position = p.pos();
+        d->hotSpot = p.screenPos();
+        d->isHotSpotSet = true;
+#endif // QT_WEBOS
         result = QGestureRecognizer::TriggerGesture;
         break;
     }
@@ -450,6 +459,10 @@ QGestureRecognizer::Result QTapGestureRecognizer::recognize(QGesture *state,
     case QEvent::TouchEnd: {
         if (q->state() != Qt::NoGesture && ev->touchPoints().size() == 1) {
             QTouchEvent::TouchPoint p = ev->touchPoints().at(0);
+#ifdef QT_WEBOS // REBASE_CHECK_REQUIRED use setHotSpot?
+            d->hotSpot = p.screenPos();
+            d->isHotSpotSet = true;
+#endif // QT_WEBOS
             QPoint delta = p.pos().toPoint() - p.startPos().toPoint();
             enum { TapRadius = 40 };
             if (delta.manhattanLength() <= TapRadius) {
@@ -466,6 +479,22 @@ QGestureRecognizer::Result QTapGestureRecognizer::recognize(QGesture *state,
     case QEvent::MouseButtonRelease:
         result = QGestureRecognizer::Ignore;
         break;
+#ifdef QT_WEBOS
+    case QEvent::Gesture:
+    {
+    	QGesture* g = static_cast<QGestureEvent*>(event)->gesture(Qt::SysMgrGestureFlick);
+		if (g && g->state() == Qt::GestureFinished && q->state() != Qt::NoGesture ) {
+			result = QGestureRecognizer::CancelGesture;
+			break;
+		}
+        g = static_cast<QGestureEvent*>(event)->gesture(Qt::SysMgrGestureScreenEdgeFlick);
+        if (g && g->state() == Qt::GestureFinished && q->state() != Qt::NoGesture ) {
+            result = QGestureRecognizer::CancelGesture;
+            break;
+        }
+    }
+    // fall through
+#endif // QT_WEBOS
     default:
         result = QGestureRecognizer::Ignore;
         break;
@@ -503,6 +532,7 @@ QGestureRecognizer::Result
 QTapAndHoldGestureRecognizer::recognize(QGesture *state, QObject *object,
                                         QEvent *event)
 {
+#ifndef QT_WEBOS
     QTapAndHoldGesture *q = static_cast<QTapAndHoldGesture *>(state);
     QTapAndHoldGesturePrivate *d = q->d_func();
 
@@ -575,6 +605,65 @@ QTapAndHoldGestureRecognizer::recognize(QGesture *state, QObject *object,
     default:
         return QGestureRecognizer::Ignore;
     }
+#else
+    QGestureRecognizer::Result result = QGestureRecognizer::CancelGesture;
+    QTapAndHoldGesture *q = static_cast<QTapAndHoldGesture *>(state);
+    QTapAndHoldGesturePrivate *d = q->d_func();
+
+    if (object == state && event->type() == QEvent::Timer) {
+        q->killTimer(d->timerId);
+        d->timerId = 0;
+        if (q->state() != Qt::NoGesture && q->state() != Qt::GestureCanceled) {
+        	result = QGestureRecognizer::FinishGesture;
+        }
+        return result | QGestureRecognizer::ConsumeEventHint;
+    }
+
+    const QTouchEvent *ev = static_cast<const QTouchEvent *>(event);
+
+    enum { TimerInterval = 700 };
+    enum { TapRadius = 40 };
+
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        d->position = ev->touchPoints().at(0).startScreenPos();
+        q->setHotSpot(d->position);
+        if (d->timerId)
+            q->killTimer(d->timerId);
+        d->timerId = q->startTimer(TimerInterval);
+        return QGestureRecognizer::TriggerGesture;
+    case QEvent::TouchEnd:
+		result = QGestureRecognizer::CancelGesture;
+		if (d->timerId)
+			q->killTimer(d->timerId);
+		d->timerId = 0;
+        break;
+    case QEvent::TouchUpdate:
+        if (d->timerId && ev->touchPoints().size() == 1) {
+            QTouchEvent::TouchPoint p = ev->touchPoints().at(0);
+            QPoint delta = p.pos().toPoint() - p.startPos().toPoint();
+            if (delta.manhattanLength() > TapRadius) {
+                result = QGestureRecognizer::CancelGesture;
+				if (d->timerId)
+	                q->killTimer(d->timerId);
+				d->timerId = 0;
+            } else {
+            	result = QGestureRecognizer::Ignore;
+            }
+        } else if (ev->touchPoints().size() > 1) {
+        	result = QGestureRecognizer::CancelGesture;
+			if (d->timerId)
+	        	q->killTimer(d->timerId);
+			d->timerId = 0;
+        } else {
+        	result = QGestureRecognizer::Ignore;
+        }
+		break;
+    default:
+        return QGestureRecognizer::Ignore;
+    }
+    return result;
+#endif // QT_WEBOS
 }
 
 void QTapAndHoldGestureRecognizer::reset(QGesture *state)

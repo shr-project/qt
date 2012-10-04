@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -56,10 +58,17 @@
 
 #include "qplatformdefs.h"
 
+#ifndef QT_WEBOS
 #include "qclipboard.h"
 #include "qclipboard_p.h"
+#endif // QT_WEBOS
 
 #ifndef QT_NO_CLIPBOARD
+
+#ifdef QT_WEBOS
+#include "qclipboard.h"
+#include "qclipboard_p.h"
+#endif // QT_WEBOS
 
 #include "qabstracteventdispatcher.h"
 #include "qapplication.h"

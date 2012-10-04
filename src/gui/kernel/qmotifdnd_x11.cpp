@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -764,6 +766,7 @@ QVariant QX11Data::motifdndObtainData(const char *mimeType)
 
     XFlush(X11->display);
 
+#ifndef QT_NO_CLIPBOARD // for QT_WEBOS
     XEvent xevent;
     bool got=X11->clipboardWaitForEvent(tw->internalWinId(), SelectionNotify, &xevent, 5000);
     if (got) {
@@ -779,6 +782,7 @@ QVariant QX11Data::motifdndObtainData(const char *mimeType)
 
     // wait again for SelectionNotify event
     X11->clipboardWaitForEvent(tw->internalWinId(), SelectionNotify, &xevent, 5000);
+#endif // QT_NO_CLIPBOARD // for QT_WEBOS
 
     if ((dropWidget->windowType() == Qt::Desktop)) {
         delete tw;

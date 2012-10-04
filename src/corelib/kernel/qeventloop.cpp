@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -325,5 +327,13 @@ void QEventLoop::wakeUp()
 */
 void QEventLoop::quit()
 { exit(0); }
+
+#ifdef QT_WEBOS
+Qt::HANDLE QEventLoop::platformHandle() const
+{
+    Q_D(const QEventLoop);
+    d->threadData->eventDispatcher->platformHandle();
+}
+#endif // QT_WEBOS
 
 QT_END_NAMESPACE

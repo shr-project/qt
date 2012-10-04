@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -132,6 +134,9 @@ public:
         MetaModifier         = 0x10000000,
         KeypadModifier       = 0x20000000,
         GroupSwitchModifier  = 0x40000000,
+        // --> Palm
+        ExternalKeyboardModifier = 0x80000000,
+        // <-- Palm
         // Do not extend the mask to include 0x01000000
         KeyboardModifierMask = 0xfe000000
     };
@@ -1120,6 +1125,39 @@ public:
         Key_Camera = 0x01100020,
         Key_CameraFocus = 0x01100021,
 
+#ifdef QT_WEBOS
+        // core navi keys
+        Key_Gesture_Key_Range_Start = 0x01200000,
+        Key_CoreNavi_Back = 0x01200001,
+        Key_CoreNavi_Menu = 0x01200002,
+        Key_CoreNavi_QuickLaunch = 0x01200003,
+        Key_CoreNavi_Launcher = 0x01200004,
+        Key_CoreNavi_SwipeDown = 0x01200005,
+        Key_CoreNavi_Next = 0x01200006,
+        Key_CoreNavi_Previous = 0x01200007,
+        Key_CoreNavi_Home = 0x01200008,
+        Key_CoreNavi_Meta = 0x01200009,
+        Key_Flick = 0x01200010,
+        Key_Gesture_Key_Range_End = 0x01200099,
+
+        Key_Slider = 0x01200100,
+        Key_Optical = 0x01200101,
+        Key_Ringer = 0x01200102,
+        Key_Power = 0x01200103, // Neither Key_PowerDown nor Key_PowerOff make sense for us to use.
+        Key_HeadsetButton = 0x01200104,
+        Key_Headset = 0x01200105,
+        Key_HeadsetMic = 0x01200106,
+        Key_Keyboard = 0x01200107,
+
+        // keys for avrcp
+        Key_MediaRepeatAll = 0x01200200,
+        Key_MediaRepeatTrack = 0x01200201,
+        Key_MediaRepeatNone = 0x01200202,
+        Key_MediaShuffleOn = 0x01200203,
+        Key_MediaShuffleOff = 0x01200204,
+
+#endif // QT_WEBOS
+
         Key_unknown = 0x01ffffff
     };
 
@@ -1765,6 +1803,12 @@ public:
         SwipeGesture      = 5,
 
         CustomGesture     = 0x0100,
+
+#ifdef QT_WEBOS
+   		SysMgrGestureFlick = CustomGesture + 1,
+        SysMgrGestureSingleClick,
+        SysMgrGestureScreenEdgeFlick,
+#endif // QT_WEBOS
 
         LastGestureType   = ~0u
     };

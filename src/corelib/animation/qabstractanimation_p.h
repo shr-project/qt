@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -156,6 +158,13 @@ public:
 
     //defines the timing interval. Default is DEFAULT_TIMER_INTERVAL
     void setTimingInterval(int interval);
+
+#ifdef QT_WEBOS
+    int getTimingInterval() const
+    {
+        return timingInterval;
+    }
+#endif // QT_WEBOS
 
     /*
        this allows to have a consistent timer interval at each tick from the timer

@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -105,6 +107,11 @@ public:
 
     virtual int duration() const = 0;
     int totalDuration() const;
+
+#ifdef QT_WEBOS
+    static void setAnimationTimerInterval(int ms);
+    static int animationTimerInterval();
+#endif // QT_WEBOS
 
 Q_SIGNALS:
     void finished();

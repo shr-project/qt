@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -2263,7 +2265,12 @@ void qt_message_output(QtMsgType msgType, const char *buf)
         // Panic the current thread. We don't use real panic codes, so 0 has no special meaning.
         User::Panic(tmp, 0);
 #elif (defined(Q_OS_UNIX) || defined(Q_CC_MINGW))
+#ifndef QT_WEBOS
         abort(); // trap; generates core dump
+#else // QT_WEBOS
+        volatile int* tmp = 0;
+        *tmp = 0;
+#endif // QT_WEBOS  
 #else
         exit(1); // goodbye cruel world
 #endif

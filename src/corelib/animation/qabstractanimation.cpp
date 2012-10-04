@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -1051,6 +1053,17 @@ void QAbstractAnimation::updateDirection(QAbstractAnimation::Direction direction
     Q_UNUSED(direction);
 }
 
+#ifdef QT_WEBOS
+void QAbstractAnimation::setAnimationTimerInterval(int ms)
+{
+    QUnifiedTimer::instance()->setTimingInterval(ms);
+}
+
+int QAbstractAnimation::animationTimerInterval()
+{
+    return QUnifiedTimer::instance()->getTimingInterval();
+}
+#endif // QT_WEBOS
 
 QT_END_NAMESPACE
 

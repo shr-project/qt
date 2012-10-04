@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
@@ -389,6 +391,12 @@ public:
     QPaintDevice* device() const;
     QColor overlayTransparentColor() const;
 
+#ifdef QT_WEBOS
+#if defined(Q_WS_QWS)
+    void setEglSwapInterval(int interval);
+#endif
+#endif // QT_WEBOS
+
     static const QGLContext* currentContext();
 
 #ifdef Q_WS_QPA
@@ -440,6 +448,7 @@ private:
     friend class QGL2PaintEngineExPrivate;
     friend class QGLEngineShaderManager;
     friend class QGLWindowSurface;
+	friend class QEglGLPixmapData;
     friend class QGLPixmapData;
     friend class QGLPixmapFilterBase;
     friend class QGLTextureGlyphCache;

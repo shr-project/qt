@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
@@ -50,6 +52,7 @@
 #if !defined(QT_OPENGL_ES_1)
 #include <private/qpixmapdata_gl_p.h>
 #include <private/qwindowsurface_gl_p.h>
+#include <private/qpixmapdata_egl_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE

@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
@@ -287,6 +289,14 @@ bool QGLPixmapData::isValid() const
 
 bool QGLPixmapData::isValidContext(const QGLContext *ctx) const
 {
+#ifdef QT_WEBOS
+#ifdef QT_OPENGL_ES_2	
+   // HACK: this is to prevent binding textures in here which
+   // causes some textures to appear inverted
+   return false;
+#endif
+#endif // QT_WEBOS
+	
     if (ctx == m_ctx)
         return true;
 

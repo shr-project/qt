@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
@@ -90,6 +92,7 @@
 #include <private/qimage_p.h>
 #include <private/qpixmapdata_p.h>
 #include <private/qpixmapdata_gl_p.h>
+#include <private/qpixmapdata_egl_p.h>
 #include <private/qglpixelbuffer_p.h>
 #include <private/qimagepixmapcleanuphooks_p.h>
 #include "qcolormap.h"
@@ -1600,6 +1603,9 @@ bool operator!=(const QGLFormat& a, const QGLFormat& b)
 }
 
 struct QGLContextGroupList {
+    // this had to be recursive since we got into a deadlock from QtWebkit when switching backends
+    QGLContextGroupList()
+        : m_mutex(QMutex::Recursive) {};
     void append(QGLContextGroup *group) {
         QMutexLocker locker(&m_mutex);
         m_list.append(group);
@@ -2615,10 +2621,11 @@ QGLTexture *QGLContextPrivate::bindTexture(const QPixmap &pixmap, GLenum target,
     QPixmapData *pd = pixmap.pixmapData();
 #if !defined(QT_OPENGL_ES_1)
     if (target == GL_TEXTURE_2D && pd->classId() == QPixmapData::OpenGLClass) {
+
         const QGLPixmapData *data = static_cast<const QGLPixmapData *>(pd);
 
         if (data->isValidContext(q)) {
-            data->bind();
+			data->bind();
             return data->texture();
         }
     }
@@ -3824,14 +3831,24 @@ void QGLContextPrivate::setCurrentContext(QGLContext *context)
     \sa QGLFormat::defaultFormat(), {Textures Example}
 */
 
+#ifdef QT_WEBOS
+extern QGLWidget* qt_dummyShareWidget;
+#endif // QT_WEBOS
+
 QGLWidget::QGLWidget(QWidget *parent, const QGLWidget* shareWidget, Qt::WindowFlags f)
     : QWidget(*(new QGLWidgetPrivate), parent, f | Qt::MSWindowsOwnDC)
 {
+#ifdef QT_WEBOS
+    qt_dummyShareWidget = this;
+#endif // QT_WEBOS
     Q_D(QGLWidget);
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoFillBackground(true); // for compatibility
     d->init(new QGLContext(QGLFormat::defaultFormat(), this), shareWidget);
+#ifdef QT_WEBOS
+    qt_dummyShareWidget = this;
+#endif // QT_WEBOS
 }
 
 
@@ -3867,11 +3884,17 @@ QGLWidget::QGLWidget(const QGLFormat &format, QWidget *parent, const QGLWidget* 
                      Qt::WindowFlags f)
     : QWidget(*(new QGLWidgetPrivate), parent, f | Qt::MSWindowsOwnDC)
 {
+#ifdef QT_WEBOS
+    qt_dummyShareWidget = this;
+#endif // QT_WEBOS
     Q_D(QGLWidget);
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoFillBackground(true); // for compatibility
     d->init(new QGLContext(format, this), shareWidget);
+#ifdef QT_WEBOS
+    qt_dummyShareWidget = this;
+#endif // QT_WEBOS
 }
 
 /*!
@@ -3903,11 +3926,17 @@ QGLWidget::QGLWidget(QGLContext *context, QWidget *parent, const QGLWidget *shar
                      Qt::WindowFlags f)
     : QWidget(*(new QGLWidgetPrivate), parent, f | Qt::MSWindowsOwnDC)
 {
+#ifdef QT_WEBOS
+    qt_dummyShareWidget = this;
+#endif // QT_WEBOS
     Q_D(QGLWidget);
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoFillBackground(true); // for compatibility
     d->init(context, shareWidget);
+#ifdef QT_WEBOS
+    qt_dummyShareWidget = this;
+#endif // QT_WEBOS
 }
 
 /*!
@@ -5545,6 +5574,10 @@ QGLExtensions::Extensions QGLExtensions::currentContextExtensions()
         // FRAMEBUFFER_SRGB_CAPABLE_EXT isn't supported.
         glGetError();
     }
+#ifdef QT_WEBOS
+    if (extensions.match("GL_EXT_texture_format_BGRA8888"))
+        glExtensions |= BGRATextureFormat;
+#endif // QT_WEBOS
 
     return glExtensions;
 }

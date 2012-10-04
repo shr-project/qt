@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
@@ -64,6 +66,7 @@
 
 // #define QT_OPENGL_CACHE_AS_VBOS
 
+
 #include "qglgradientcache_p.h"
 #include "qpaintengineex_opengl2_p.h"
 
@@ -88,6 +91,7 @@
 
 #include <QDebug>
 
+
 QT_BEGIN_NAMESPACE
 
 inline static bool isPowerOfTwo(uint x)
@@ -104,6 +108,8 @@ extern bool qt_applefontsmoothing_enabled;
 #endif
 
 #if !defined(QT_MAX_CACHED_GLYPH_SIZE)
+#  define QT_MAX_CACHED_GLYPH_SIZE 200
+#else
 #  define QT_MAX_CACHED_GLYPH_SIZE 64
 #endif
 
@@ -194,6 +200,13 @@ void QGL2PaintEngineExPrivate::useSimpleShader()
         updateMatrix();
 }
 
+#ifdef QT_WEBOS
+static inline bool isPowerOfTwo(int v)
+{
+    return (v & (v-1)) == 0;
+}
+#endif // QT_WEBOS
+
 void QGL2PaintEngineExPrivate::updateBrushTexture()
 {
     Q_Q(QGL2PaintEngineEx);
@@ -247,13 +260,19 @@ void QGL2PaintEngineExPrivate::updateBrushTexture()
         QGLTexture *tex = ctx->d_func()->bindTexture(currentBrushPixmap, GL_TEXTURE_2D, GL_RGBA,
                                                      QGLContext::InternalBindOption |
                                                      QGLContext::CanFlipNativePixmapBindOption);
+#ifndef QT_WEBOS
+        updateTextureFilter(GL_TEXTURE_2D, GL_REPEAT, q->state()->renderHints & QPainter::SmoothPixmapTransform);
+#else // QT_WEBOS
         GLenum wrapMode = GL_REPEAT;
-#ifdef QT_OPENGL_ES_2
-        // should check for GL_OES_texture_npot or GL_IMG_texture_npot extension
-        if (!isPowerOfTwo(currentBrushPixmap.width()) || !isPowerOfTwo(currentBrushPixmap.height()))
+#if  defined(QT_OPENGL_ES_2)
+        // Standard OpenGL ES 2.0 spec says only supported option for npot textures is CLAMP_TO_EDGE.
+        // GL_OES_Texture_npot extension is supposed to allow the other modes, but SGX driver 1.5
+        // still has issues with it.
+//        if (!isPowerOfTwo(currentBrushPixmap.width()) || !isPowerOfTwo(currentBrushPixmap.height()))
             wrapMode = GL_CLAMP_TO_EDGE;
 #endif
         updateTextureFilter(GL_TEXTURE_2D, wrapMode, q->state()->renderHints & QPainter::SmoothPixmapTransform);
+#endif // QT_WEBOS
         textureInvertedY = tex->options & QGLContext::InvertedYBindOption ? -1 : 1;
     }
     brushTextureDirty = false;
@@ -1440,12 +1459,12 @@ void QGL2PaintEngineEx::drawImage(const QRectF& dest, const QImage& image, const
 void QGL2PaintEngineEx::drawStaticTextItem(QStaticTextItem *textItem)
 {
     Q_D(QGL2PaintEngineEx);
-
+    //qWarning("QGL2PaintEngineEx::drawStaticTextItem");
     ensureActive();
 
     QPainterState *s = state();
     float det = s->matrix.determinant();
-
+    
     // don't try to cache huge fonts or vastly transformed fonts
     QFontEngine *fontEngine = textItem->fontEngine();
     const qreal pixelSize = fontEngine->fontDef.pixelSize;
@@ -1818,6 +1837,16 @@ void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyp
             glEnable(GL_BLEND);
             glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
 
+#ifdef QT_WEBOS
+            GLenum wrapMode = GL_REPEAT;
+#if  defined(QT_OPENGL_ES_2)
+            // Standard OpenGL ES 2.0 spec says only supported option for npot textures is CLAMP_TO_EDGE.
+            // GL_OES_Texture_npot extension is supposed to allow the other modes, but SGX driver 1.5
+            // still has issues with it.
+            wrapMode = GL_CLAMP_TO_EDGE;
+#endif
+#endif // QT_WEBOS
+            
             glActiveTexture(GL_TEXTURE0 + QT_MASK_TEXTURE_UNIT);
             glBindTexture(GL_TEXTURE_2D, cache->texture());
 #if !defined(QT_NO_DEBUG) && defined(QT_OPENGL_ES_2)
@@ -1829,7 +1858,11 @@ void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyp
                 qWarning("GL2 Paint Engine: This system does not support the REPEAT wrap mode for non-power-of-two textures.");
             }
 #endif
+#ifndef QT_WEBOS
             updateTextureFilter(GL_TEXTURE_2D, GL_REPEAT, false);
+#else // QT_WEBOS
+            updateTextureFilter(GL_TEXTURE_2D, wrapMode, false);
+#endif // QT_WEBOS
 
 #if defined(QT_OPENGL_DRAWCACHEDGLYPHS_INDEX_ARRAY_VBO)
             glDrawElements(GL_TRIANGLE_STRIP, 6 * numGlyphs, GL_UNSIGNED_SHORT, 0);
@@ -1880,6 +1913,29 @@ void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyp
         }
     }
 
+#ifdef QT_WEBOS
+    GLenum wrapMode = GL_REPEAT;
+#if  defined(QT_OPENGL_ES_2)
+    // Standard OpenGL ES 2.0 spec says only supported option for npot textures is CLAMP_TO_EDGE.
+    // GL_OES_Texture_npot extension is supposed to allow the other modes, but SGX driver 1.5
+    // still has issues with it.
+    wrapMode = GL_CLAMP_TO_EDGE;
+#endif
+#endif // QT_WEBOS
+	
+    glActiveTexture(GL_TEXTURE0 + QT_MASK_TEXTURE_UNIT);
+    if (lastMaskTextureUsed != cache->texture()) {
+        glBindTexture(GL_TEXTURE_2D, cache->texture());
+        lastMaskTextureUsed = cache->texture();
+    }
+#ifndef QT_WEBOS
+    updateTextureFilter(GL_TEXTURE_2D, GL_REPEAT, s->matrix.type() > QTransform::TxTranslate);
+#else // QT_WEBOS
+    updateTextureFilter(GL_TEXTURE_2D, wrapMode, false);
+#endif // QT_WEBOS
+
+    shaderManager->currentProgram()->setUniformValue(location(QGLEngineShaderManager::MaskTexture), QT_MASK_TEXTURE_UNIT);
+
 #if defined(QT_OPENGL_DRAWCACHEDGLYPHS_INDEX_ARRAY_VBO)
     glDrawElements(GL_TRIANGLE_STRIP, 6 * numGlyphs, GL_UNSIGNED_SHORT, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -1887,8 +1943,8 @@ void QGL2PaintEngineExPrivate::drawCachedGlyphs(QFontEngineGlyphCache::Type glyp
     glDrawElements(GL_TRIANGLE_STRIP, 6 * numGlyphs, GL_UNSIGNED_SHORT, elementIndices.data());
 #endif
 
-    if (srgbFrameBufferEnabled)
-        glDisable(FRAMEBUFFER_SRGB_EXT);
+//    if (srgbFrameBufferEnabled)
+  //      glDisable(FRAMEBUFFER_SRGB_EXT);
 
 }
 

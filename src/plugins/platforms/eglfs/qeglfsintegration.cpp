@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
@@ -49,16 +51,16 @@
 #include <QtGui/QPlatformWindow>
 #include <QtGui/QPlatformWindowFormat>
 #include <QtOpenGL/private/qpixmapdata_gl_p.h>
-
+#include <QDir>
 #include <EGL/egl.h>
 
 QT_BEGIN_NAMESPACE
+
 
 QEglFSIntegration::QEglFSIntegration()
     : mFontDb(new QGenericUnixFontDatabase())
 {
     m_primaryScreen = new QEglFSScreen(EGL_DEFAULT_DISPLAY);
-
     mScreens.append(m_primaryScreen);
 #ifdef QEGL_EXTRA_DEBUG
     qWarning("QEglIntegration\n");

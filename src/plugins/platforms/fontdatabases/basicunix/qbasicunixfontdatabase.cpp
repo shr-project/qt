@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
@@ -40,7 +42,6 @@
 ****************************************************************************/
 
 #include "qbasicunixfontdatabase.h"
-
 #include <QtGui/private/qapplication_p.h>
 #include <QtGui/QPlatformScreen>
 
@@ -202,7 +203,6 @@ void QBasicUnixFontDatabase::populateFontDatabase()
     dir.refresh();
     for (int i = 0; i < int(dir.count()); ++i) {
         const QByteArray file = QFile::encodeName(dir.absoluteFilePath(dir[i]));
-//        qDebug() << "looking at" << file;
         addTTFile(QByteArray(), file);
     }
 }
@@ -217,7 +217,7 @@ QFontEngine *QBasicUnixFontDatabase::fontEngine(const QFontDef &fontDef, QUnicod
     engine = new QFontEngineFT(fontDef);
 
     bool antialias = !(fontDef.styleStrategy & QFont::NoAntialias);
-    QFontEngineFT::GlyphFormat format = antialias? QFontEngineFT::Format_A8 : QFontEngineFT::Format_Mono;
+    QFontEngineFT::GlyphFormat format = antialias? QFontEngineFT::Format_A32 : QFontEngineFT::Format_Mono;
     if (!engine->init(fid,antialias,format)) {
         delete engine;
         engine = 0;
@@ -237,17 +237,37 @@ QFontEngine *QBasicUnixFontDatabase::fontEngine(const QFontDef &fontDef, QUnicod
     return engine;
 }
 
-QStringList QBasicUnixFontDatabase::fallbacksForFamily(const QString family, const QFont::Style &style, const QUnicodeTables::Script &script) const
+QStringList QBasicUnixFontDatabase::fallbacksForFamily(const QString family, const QFont::Style &style, const QFont::StyleHint &styleHint, const QUnicodeTables::Script &script) const
 {
     Q_UNUSED(family);
     Q_UNUSED(style);
     Q_UNUSED(script);
-    return QStringList();
+    QStringList fallback;
+    switch(styleHint) {
+        case QFont::SansSerif:
+            fallback << "Arial";
+            break;
+        case QFont::Serif:
+            fallback << "Georgia";
+            break;
+        case QFont::TypeWriter:
+            fallback << "Courier New";
+            break;
+        case QFont::Monospace:
+            fallback << "Courier New";
+            break;
+        default:
+            fallback << "Verdana";
+            break;
+    }
+    return fallback << "Hei S" << "HeiT" << "Heisei Kaku Gothic" << "Dotum";
 }
 
 QStringList QBasicUnixFontDatabase::addApplicationFont(const QByteArray &fontData, const QString &fileName)
 {
-    return addTTFile(fontData,fileName.toLocal8Bit());
+    QStringList added;
+    added = addTTFile(fontData,fileName.toLocal8Bit());
+    return added;
 }
 
 void QBasicUnixFontDatabase::releaseHandle(void *handle)
@@ -267,6 +287,7 @@ QStringList QBasicUnixFontDatabase::addTTFile(const QByteArray &fontData, const 
     do {
         FT_Face face;
         FT_Error error;
+
         if (!fontData.isEmpty()) {
             error = FT_New_Memory_Face(library, (const FT_Byte *)fontData.constData(), fontData.size(), index, &face);
         } else {
@@ -311,12 +332,13 @@ QStringList QBasicUnixFontDatabase::addTTFile(const QByteArray &fontData, const 
         }
 
         QString family = QString::fromAscii(face->family_name);
+        if(family.isEmpty())
+            family = QString::fromLocal8Bit(file);
         FontFile *fontFile = new FontFile;
         fontFile->fileName = file;
         fontFile->indexValue = index;
 
         QFont::Stretch stretch = QFont::Unstretched;
-
         registerFont(family,"",weight,style,stretch,true,true,0,writingSystems,fontFile);
 
         families.append(family);

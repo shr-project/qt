@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
@@ -64,7 +66,7 @@ public:
     QSize mPhysicalSize;
 };
 
-class QMinimalIntegration : public QPlatformIntegration
+class QMinimalIntegration : public QPlatformIntegration 
 {
 public:
     QMinimalIntegration();
@@ -74,11 +76,12 @@ public:
     QPixmapData *createPixmapData(QPixmapData::PixelType type) const;
     QPlatformWindow *createPlatformWindow(QWidget *widget, WId winId) const;
     QWindowSurface *createWindowSurface(QWidget *widget, WId winId) const;
-
+    QPlatformFontDatabase* fontDatabase() const;
     QList<QPlatformScreen *> screens() const { return mScreens; }
 
 private:
     QList<QPlatformScreen *> mScreens;
+    QPlatformFontDatabase *mFontDb;
 };
 
 QT_END_NAMESPACE

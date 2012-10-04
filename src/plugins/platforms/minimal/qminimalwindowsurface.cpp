@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
@@ -68,10 +70,10 @@ void QMinimalWindowSurface::flush(QWidget *widget, const QRegion &region, const 
     Q_UNUSED(region);
     Q_UNUSED(offset);
 
-    static int c = 0;
-    QString filename = QString("output%1.png").arg(c++, 4, 10, QLatin1Char('0'));
-    qDebug() << "QMinimalWindowSurface::flush() saving contents to" << filename.toLocal8Bit().constData();
-    mImage.save(filename);
+//    static int c = 0;
+//    QString filename = QString("output%1.png").arg(c++, 4, 10, QLatin1Char('0'));
+//    qDebug() << "QMinimalWindowSurface::flush() saving contents to" << filename.toLocal8Bit().constData();
+//    mImage.save(filename);
 }
 
 void QMinimalWindowSurface::resize(const QSize &size)

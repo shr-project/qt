@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
@@ -41,11 +43,13 @@
 
 #include "qminimalintegration.h"
 #include "qminimalwindowsurface.h"
+#include "qgenericunixfontdatabase.h"
 
 #include <QtGui/private/qpixmap_raster_p.h>
 #include <QtGui/QPlatformWindow>
 
 QMinimalIntegration::QMinimalIntegration()
+    : mFontDb(new QGenericUnixFontDatabase())
 {
     QMinimalScreen *mPrimaryScreen = new QMinimalScreen();
 
@@ -80,3 +84,9 @@ QWindowSurface *QMinimalIntegration::createWindowSurface(QWidget *widget, WId wi
     Q_UNUSED(winId);
     return new QMinimalWindowSurface(widget);
 }
+
+QPlatformFontDatabase *QMinimalIntegration::fontDatabase() const
+{
+    return mFontDb;
+}
+

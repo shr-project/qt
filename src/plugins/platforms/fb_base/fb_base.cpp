@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
@@ -124,7 +126,7 @@ void QPlatformSoftwareCursor::changeCursor(QCursor * widgetCursor, QWidget * wid
     Q_UNUSED(widget);
 #else
     Q_UNUSED(widget);
-    Qt::CursorShape shape = widgetCursor->shape();
+   /* Qt::CursorShape shape = widgetCursor->shape();
 
     if (shape == Qt::BitmapCursor) {
         // application supplied cursor
@@ -138,6 +140,7 @@ void QPlatformSoftwareCursor::changeCursor(QCursor * widgetCursor, QWidget * wid
     QPoint screenOffset = screen->geometry().topLeft(); // global to local translation
     if (onScreen || screen->geometry().intersects(currentRect.translated(screenOffset)))
         setDirty();
+	*/
 #endif
 }
 

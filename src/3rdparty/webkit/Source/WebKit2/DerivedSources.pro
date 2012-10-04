@@ -5,6 +5,8 @@ CONFIG -= debug_and_release
 
 isEmpty(OUTPUT_DIR): OUTPUT_DIR = ../..
 
+isEmpty(OUTPUT_DIR): OUTPUT_DIR = ../..
+
 CONFIG(standalone_package) {
     isEmpty(WEBKIT2_GENERATED_SOURCES_DIR):WEBKIT2_GENERATED_SOURCES_DIR = $$PWD/generated
     isEmpty(WC_GENERATED_SOURCES_DIR):WC_GENERATED_SOURCES_DIR = $$PWD/../WebCore/generated

@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
@@ -53,6 +55,8 @@ Window::Window()
     nativeLabel->setAlignment(Qt::AlignHCenter);
     QLabel *openGLLabel = new QLabel(tr("OpenGL"));
     openGLLabel->setAlignment(Qt::AlignHCenter);
+
+    qWarning() << (openGL->doubleBuffer() ? "true" : "false");
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(native, 0, 0);

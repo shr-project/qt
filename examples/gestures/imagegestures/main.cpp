@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
@@ -52,7 +54,7 @@ int main(int argc, char *argv[])
     if (QApplication::arguments().size() > 1)
         w.openDirectory(QApplication::arguments().at(1));
     else
-        w.openDirectory(QFileDialog::getExistingDirectory(0, "Select image folder"));
+		w.openDirectory("/usr/palm/applications/com.palm.app.phone/images");
 
     return app.exec();
 }

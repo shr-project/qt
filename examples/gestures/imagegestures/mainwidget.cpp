@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
@@ -42,11 +44,11 @@
 #include "mainwidget.h"
 
 MainWidget::MainWidget(QWidget *parent)
-    : QMainWindow(parent)
+	: QWidget(parent)
 {
     resize(400, 300);
-    imageWidget = new ImageWidget(this);
-    setCentralWidget(imageWidget);
+	imageWidget = new ImageWidget(this);
+//    setCentralWidget(imageWidget);
 }
 
 void MainWidget::openDirectory(const QString &path)

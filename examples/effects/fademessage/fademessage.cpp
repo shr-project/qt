@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
@@ -123,10 +125,5 @@ void FadeMessage::setupScene()
     press->setText(tr("Press me"));
     connect(press, SIGNAL(clicked()), SLOT(togglePopup()));
     m_scene.addWidget(press);
-
-#if defined(Q_WS_S60) || defined(Q_WS_MAEMO_5)
-    press->move(200, 210);
-#else
-    press->move(300, 500);
-#endif
+    press->move(20, 20);
 }

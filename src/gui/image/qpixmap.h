@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -116,6 +118,10 @@ public:
 
     bool hasAlpha() const;
     bool hasAlphaChannel() const;
+
+#ifdef QT_WEBOS
+    void setHasAlpha(bool);
+#endif
 
 #ifndef QT_NO_IMAGE_HEURISTIC_MASK
     QBitmap createHeuristicMask(bool clipTight = true) const;

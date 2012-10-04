@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -1823,6 +1825,20 @@ QPixmap QPixmap::transformed(const QMatrix &matrix, Qt::TransformationMode mode)
     \fn DataPtr &QPixmap::data_ptr()
     \internal
 */
+
+#ifdef QT_WEBOS
+void QPixmap::setHasAlpha(bool val)
+{
+    if (paintingActive()) {
+        qWarning("QPixmap::setHasAlpha: "
+                 "Cannot set alpha while pixmap is being painted on");
+        return;
+    }
+
+    detach();
+    data->setHasAlpha(val);
+}
+#endif
 
 /*!
     Returns true if this pixmap has an alpha channel, \e or has a

@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -112,6 +114,7 @@ public:
                                 Qt::TransformationMode mode) const;
     virtual void setAlphaChannel(const QPixmap &alphaChannel);
     virtual QPixmap alphaChannel() const;
+    virtual void setHasAlpha(bool val) { Q_UNUSED(val) }
     virtual QImage toImage() const = 0;
     virtual QImage toImage(const QRect &rect) const;
     virtual QPaintEngine* paintEngine() const = 0;

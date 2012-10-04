@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -73,6 +75,10 @@ public:
     QWidget *widget() const;
     void setWidget(QWidget *widget);
 
+#ifdef QT_WEBOS
+    bool canceled() const;
+    void setCanceled (bool canceled);
+#endif // QT_WEBOS
 protected:
     QGraphicsSceneEvent(QGraphicsSceneEventPrivate &dd, Type type = None);
     QScopedPointer<QGraphicsSceneEventPrivate> d_ptr;
@@ -123,6 +129,11 @@ public:
 
     Qt::KeyboardModifiers modifiers() const;
     void setModifiers(Qt::KeyboardModifiers modifiers);
+
+#ifdef QT_WEBOS
+    bool canceled() const;
+    void setCanceled(const bool canceled);
+#endif // QT_WEBOS
 
 private:
     Q_DECLARE_PRIVATE(QGraphicsSceneMouseEvent)

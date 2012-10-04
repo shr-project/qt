@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -1196,6 +1198,9 @@ bool QGraphicsScenePrivate::filterEvent(QGraphicsItem *item, QEvent *event)
 */
 bool QGraphicsScenePrivate::sendEvent(QGraphicsItem *item, QEvent *event)
 {
+// Patching an open Qt issue (http://bugreports.qt.nokia.com/browse/QTBUG-11280)
+#ifndef QT_WEBOS
+
     if (QGraphicsObject *object = item->toGraphicsObject()) {
 #ifndef QT_NO_GESTURES
         QGestureManager *gestureManager = QApplicationPrivate::instance()->gestureManager;
@@ -1205,6 +1210,8 @@ bool QGraphicsScenePrivate::sendEvent(QGraphicsItem *item, QEvent *event)
         }
 #endif // QT_NO_GESTURES
     }
+
+#endif // QT_WEBOS
 
     if (filterEvent(item, event))
         return false;

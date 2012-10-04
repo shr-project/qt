@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -282,6 +284,23 @@ static const struct symbol_map_t symbol_map[] = {
     { "Help",          Qt::Key_Help },
     { "Pause",         Qt::Key_Pause },
 
+    { "Search",             Qt::Key_Search },
+    { "MonBrightnessDown",  Qt::Key_MonBrightnessDown },
+    { "MonBrightnessUp",    Qt::Key_MonBrightnessUp },
+    { "Rewind",             Qt::Key_MediaPrevious },
+    { "Play",               Qt::Key_MediaPlay },
+    { "PlayPause",          Qt::Key_MediaTogglePlayPause },
+    { "FastForward",        Qt::Key_MediaNext },
+    { "Mute",               Qt::Key_VolumeMute },
+    { "VolumeDown",         Qt::Key_VolumeDown },
+    { "VolumeUp",           Qt::Key_VolumeUp },
+    { "Meta",               Qt::Key_Meta },
+    { "SuperL",             Qt::Key_Super_L },
+#ifdef QT_WEBOS
+    { "Sleep",              Qt::Key_Power },
+    { "Keyboard",           Qt::Key_Keyboard },
+#endif
+
     { "KP_0",        Qt::Key_0 | Qt::KeypadModifier },
     { "KP_1",        Qt::Key_1 | Qt::KeypadModifier },
     { "KP_2",        Qt::Key_2 | Qt::KeypadModifier },
@@ -307,6 +326,13 @@ static const struct symbol_map_t symbol_map[] = {
     { "dead_tilde",      Qt::Key_Dead_Tilde },
     { "dead_diaeresis",  Qt::Key_Dead_Diaeresis },
     { "dead_cedilla",    Qt::Key_Dead_Cedilla },
+    { "dead_abovering",  Qt::Key_Dead_Abovering },
+    { "dead_caron",      Qt::Key_Dead_Caron },
+    { "dead_abovedot",   Qt::Key_Dead_Abovedot },
+    { "dead_ogonek",     Qt::Key_Dead_Ogonek },
+    { "dead_macron",     Qt::Key_Dead_Macron },
+    { "dead_doubleacute", Qt::Key_Dead_Doubleacute },
+    { "dead_breve",      Qt::Key_Dead_Breve },
 
     { "Down",    Qt::Key_Down },
     { "Left",    Qt::Key_Left },
@@ -335,8 +361,15 @@ static const symbol_dead_unicode_t symbol_dead_unicode[] = {
     { Qt::Key_Dead_Acute,      '\'' },
     { Qt::Key_Dead_Circumflex, '^' },
     { Qt::Key_Dead_Tilde,      '~' },
-    { Qt::Key_Dead_Diaeresis,  '"' },
+    { Qt::Key_Dead_Diaeresis,  ':' },
     { Qt::Key_Dead_Cedilla,    ',' },
+    { Qt::Key_Dead_Abovering,  'o' },
+    { Qt::Key_Dead_Caron,      'v' },
+    { Qt::Key_Dead_Abovedot,   '.' },
+    { Qt::Key_Dead_Ogonek,     ';' },
+    { Qt::Key_Dead_Macron,     '-' },
+    { Qt::Key_Dead_Doubleacute, '"' },
+    { Qt::Key_Dead_Breve,      'u' },
 };
 
 static const int symbol_dead_unicode_size = sizeof(symbol_dead_unicode)/sizeof(symbol_dead_unicode_t);
@@ -371,10 +404,6 @@ static const symbol_synonyms_t symbol_synonyms[] = {
     { "AltGr_R", "AltGr" },
     { "tilde", "asciitilde" },
     { "circumflex", "asciicircum" },
-    { "dead_ogonek", "dead_cedilla" },
-    { "dead_caron", "dead_circumflex" },
-    { "dead_breve", "dead_tilde" },
-    { "dead_doubleacute", "dead_tilde" },
     { "no-break_space", "nobreakspace" },
     { "paragraph_sign", "section" },
     { "soft_hyphen", "hyphen" },
@@ -837,7 +866,13 @@ bool KeymapParser::parseCompose(const QByteArray &str, const QTextCodec *codec, 
             return false;
         unicode = temp[0].unicode();
         return true;
-    } else {
+	} else if (str.startsWith(('+'))) {
+		bool ok = false;
+		QByteArray sym = str.right(str.length() - 1);
+		if (sym.length() == 6 && sym[1] == '+' && (sym[0] == 'U' || sym[0] == 'u'))
+			unicode = sym.mid(2).toUInt(&ok, 16);
+		return ok;
+	} else {
         quint32 code = str.toUInt();
         if (code > 255)
             return false;
@@ -983,8 +1018,17 @@ bool KeymapParser::parseSymbol(const QByteArray &str, const QTextCodec * /*codec
     }
 
     // map unicode in the iso-8859-1 range to Qt key codes
+#ifndef QT_WEBOS
     if (unicode >= 0x0020 && unicode <= 0x00ff && qtcode == Qt::Key_unknown)
         qtcode = unicode; // iso-8859-1
+#else // QT_WEBOS
+    if (unicode >= 0x0020 && unicode <= 0x00ff && qtcode == Qt::Key_unknown) {
+        if (unicode >= 0x0061 && unicode <= 0x007a)
+            qtcode = unicode - 0x20; // convert lower case to upper case
+        else
+            qtcode = unicode; // iso-8859-1
+    }
+#endif // QT_WEBOS
 
     return true;
 }

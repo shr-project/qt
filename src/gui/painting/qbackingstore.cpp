@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -756,7 +758,12 @@ void QWidgetBackingStore::markDirtyOnScreen(const QRegion &region, QWidget *widg
         }
 
         // Alien widgets with native parent != tlw.
-        QWidgetPrivate *nativeParentPrivate = nativeParent->d_func();
+        QWidgetPrivate* nativeParentPrivate;
+        if(nativeParent)
+            nativeParentPrivate = nativeParent->d_func();
+        else
+            return;
+
         if (!nativeParentPrivate->needsFlush)
             nativeParentPrivate->needsFlush = new QRegion;
         const QPoint nativeParentOffset = widget->mapTo(nativeParent, QPoint());

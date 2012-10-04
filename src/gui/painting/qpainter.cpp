@@ -2,6 +2,8 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
+** Copyright (C) 2012 Hewlett-Packard Development Company, L.P.
+** All rights reserved.
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -6099,6 +6101,9 @@ void QPainter::drawStaticText(const QPointF &topLeftPosition, const QStaticText 
 */
 void QPainter::drawText(const QPointF &p, const QString &str, int tf, int justificationPadding)
 {
+    //Strip zero-width spaces
+    const_cast<QString&>(str).remove(QChar(0x200b));
+
 #ifdef QT_DEBUG_DRAW
     if (qt_show_painter_debug_output)
         printf("QPainter::drawText(), pos=[%.2f,%.2f], str='%s'\n", p.x(), p.y(), str.toLatin1().constData());
